@@ -19,5 +19,5 @@
 | Framework | Spring Boot 4.1.0 |
 | Security | Spring Security, JWT |
 | ORM | Spring Data JPA |
-| Database | MySQL (운영), H2 (테스트) |
+| Database | MySQL|
 | Build | Gradle |
