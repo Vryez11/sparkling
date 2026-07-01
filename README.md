@@ -32,12 +32,4 @@ sparkling/
 │   └── research/                         # 조사 관련 디렉토리
 │       └── week1_research.md
 └── src/
-    ├── main/
-    │   ├── java/com/dandi/sparkling/
-    │   │   └── SparklingApplication.java  # 애플리케이션 진입점
-    │   └── resources/
-    │       └── application.properties     # 애플리케이션 설정
-    └── test/
-        └── java/com/dandi/sparkling/
-            └── SparklingApplicationTests.java
 ```
