@@ -21,3 +21,23 @@
 | ORM | Spring Data JPA |
 | Database | MySQL|
 | Build | Gradle |
+
+
+## 📁 프로젝트 구조
+
+```
+sparkling/
+├── docs/                                 # 프로젝트 문서
+│   ├── scope.md                          # 기능 명세 (필수/선택/제외 기능 정의)
+│   └── research/                         # 조사 관련 디렉토리
+│       └── week1_research.md
+└── src/
+    ├── main/
+    │   ├── java/com/dandi/sparkling/
+    │   │   └── SparklingApplication.java  # 애플리케이션 진입점
+    │   └── resources/
+    │       └── application.properties     # 애플리케이션 설정
+    └── test/
+        └── java/com/dandi/sparkling/
+            └── SparklingApplicationTests.java
+```
