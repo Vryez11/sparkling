@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<!--
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ Sparkling 발표 템플릿                                                  │
+  │                                                                       │
+  │ 사용법                                                                 │
+  │  1. 이 파일을 복사해서 docs/presentation/weekNN_presentation.html 로 저장 │
+  │  2. <title> 과 표지(#s1) 문구 수정                                       │
+  │  3. 아래 "슬라이드 유형" 예시를 복사·붙여넣어 내용 채우기                    │
+  │  4. 브라우저로 열면 끝 (오프라인 동작, CDN 의존성 없음)                     │
+  │                                                                       │
+  │ 조작                                                                   │
+  │  · → / ← (또는 클릭) 로 넘김,  Home/End 로 처음·끝                        │
+  │  · Ctrl+P → "PDF로 저장" 하면 1장=1페이지 로 출력 (PPT 변환용)             │
+  │                                                                       │
+  │ 슬라이드 추가/삭제                                                      │
+  │  · <section class="slide"> ... </section> 한 덩어리가 슬라이드 1장       │
+  │  · 순서대로 넣기만 하면 하단 페이지·점은 자동으로 맞춰짐                     │
+  │                                                                       │
+  │ 자주 쓰는 클래스                                                        │
+  │  · .grid.g2 / .grid.g3   → 카드 2·3분할                                 │
+  │  · .card / .card.pick    → 카드 / 강조(선택)된 카드                       │
+  │  · .tag                  → 카드 상단 라벨                                │
+  │  · table                 → 표 (th 는 강조색)                            │
+  │  · .row + .col           → 좌우 2단 레이아웃                             │
+  │  · .pill-list / .risk    → 리스트 / 리스크(경고색) 리스트                  │
+  │  · .chk / .no            → ✓ 초록 / ✗ 주황 강조                          │
+  │  · <code>text</code>     → 코드·강조 토큰 (노란색)                        │
+  └─────────────────────────────────────────────────────────────────────┘
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>프로젝트명 · WeekNN 발표자료</title>   <!-- ← 수정 -->
+<style>
+  :root {
+    --bg: #0e1016;
+    --card: #171a24;
+    --fg: #e7e9f0;
+    --muted: #9aa0b4;
+    --accent: #8b7cf6;   /* 메인 강조색 — 취향껏 변경 */
+    --accent2: #f6c453;
+    --line: #262a38;
+    --good: #56d6a0;
+    --warn: #f68b6c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .deck { height: 100vh; overflow: hidden; }
+  .slide {
+    display: none;
+    height: 100vh;
+    padding: 6vh 8vw;
+    flex-direction: column;
+    animation: fade .35s ease;
+  }
+  .slide.active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .kicker {
+    font-size: 15px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 14px;
+  }
+  h1 { font-size: 52px; line-height: 1.15; font-weight: 800; letter-spacing: -.02em; }
+  h2 { font-size: 38px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; margin-bottom: 26px; }
+  .sub { color: var(--muted); font-size: 20px; margin-top: 18px; line-height: 1.6; }
+
+  .grid { display: grid; gap: 18px; margin-top: 8px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 22px 24px;
+  }
+  .card h3 { font-size: 19px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .card p, .card li { font-size: 16.5px; color: var(--muted); line-height: 1.6; }
+  .card ul { padding-left: 18px; }
+  .card li { margin: 5px 0; }
+  .tag {
+    display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px;
+    border-radius: 999px; background: rgba(139,124,246,.16); color: var(--accent);
+    margin-bottom: 12px; letter-spacing: .04em;
+  }
+  .pick { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .pick .tag { background: var(--accent); color: #12121a; }
+
+  .row { display: flex; gap: 20px; align-items: stretch; }
+  .col { flex: 1; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th, td { text-align: left; padding: 12px 14px; font-size: 16.5px; border-bottom: 1px solid var(--line); }
+  th { color: var(--accent); font-size: 14px; letter-spacing: .04em; }
+  td { color: var(--fg); }
+  td.q { color: var(--muted); }
+
+  .chk { color: var(--good); font-weight: 800; }
+  .no  { color: var(--warn); font-weight: 800; }
+
+  .pill-list { list-style: none; padding: 0; }
+  .pill-list li {
+    background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 10px; padding: 14px 18px; margin: 10px 0; font-size: 17px; line-height: 1.5;
+  }
+  .pill-list li b { color: var(--fg); }
+  .risk li { border-left-color: var(--warn); }
+
+  code { color: var(--accent2); font-family: "JetBrains Mono", Consolas, monospace; font-size: .92em; }
+
+  .footer {
+    position: fixed; bottom: 20px; left: 8vw; right: 8vw;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--muted); font-size: 14px;
+  }
+  .footer .dots { display: flex; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+  .dot.on { background: var(--accent); }
+  .brand { font-weight: 800; color: var(--fg); }
+  .spacer { flex: 1; }
+
+  #s1 { justify-content: center; }
+  .cover-meta { margin-top: 40px; display: flex; gap: 40px; color: var(--muted); font-size: 17px; }
+  .cover-meta b { color: var(--fg); }
+
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    .deck { height: auto; overflow: visible; }
+    .slide { display: flex !important; height: 720px; width: 1280px; page-break-after: always; animation: none; }
+    .footer { position: absolute; }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- ══════════════ 유형 A · 표지 ══════════════ -->
+  <section class="slide active" id="s1">
+    <div class="kicker">Week NN · 진행 발표</div>
+    <h1>프로젝트명<br><span style="color:var(--accent)">이번 주 한 줄 주제</span></h1>
+    <p class="sub">한 줄 소개 · 목표</p>
+    <div class="cover-meta">
+      <div><b>스택</b><br>Java · Spring …</div>
+      <div><b>이번 주</b><br>핵심 활동</div>
+      <div><b>목표</b><br>MVP 방향</div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 유형 B · 카드 3분할 (구현한 것 등) ══════════════ -->
+  <section class="slide" id="s2">
+    <div class="kicker">01 · This week</div>
+    <h2>이번 주 구현한 것</h2>
+    <div class="grid g3">
+      <div class="card">
+        <h3>🧱 항목 1</h3>
+        <ul><li>세부 내용</li><li><code>코드/개념</code></li></ul>
+      </div>
+      <div class="card">
+        <h3>🔐 항목 2</h3>
+        <ul><li>세부 내용</li><li>세부 내용</li></ul>
+      </div>
+      <div class="card">
+        <h3>📄 항목 3</h3>
+        <ul><li>세부 내용</li><li>세부 내용</li></ul>
+      </div>
+    </div>
+    <p class="sub">이 슬라이드의 <b>한 줄 결론</b>을 여기에.</p>
+  </section>
+
+  <!-- ══════════════ 유형 C · 선택지 + 선택(강조 카드) ══════════════ -->
+  <section class="slide" id="s3">
+    <div class="kicker">02 · Options → Decision</div>
+    <h2>조사한 선택지와 결정</h2>
+    <div class="grid g3">
+      <div class="card">
+        <span class="tag">선택지 A</span>
+        <h3>방식 A</h3>
+        <p>장단점 요약.</p>
+      </div>
+      <div class="card pick">   <!-- pick = 우리가 고른 것 강조 -->
+        <span class="tag">✓ 선택</span>
+        <h3>방식 B</h3>
+        <p>고른 이유를 짧게.</p>
+      </div>
+      <div class="card">
+        <span class="tag">선택지 C</span>
+        <h3>방식 C</h3>
+        <p>장단점 요약.</p>
+      </div>
+    </div>
+    <p class="sub">→ <b>선택 근거</b>를 한 줄로.</p>
+  </section>
+
+  <!-- ══════════════ 유형 D · 표 (AI에게 물어본 것 등) ══════════════ -->
+  <section class="slide" id="s4">
+    <div class="kicker">03 · With AI, not by AI</div>
+    <h2>AI에게 물어본 것 &amp; 그대로 믿지 않은 것</h2>
+    <table>
+      <tr><th style="width:42%">물어본 것</th><th style="width:14%">받은 답</th><th>우리가 판단한 것</th></tr>
+      <tr><td class="q">질문</td><td>AI 답</td><td>우리 결론 (<b>왜 다르게 갔는지</b>)</td></tr>
+      <tr><td class="q">질문</td><td>AI 답</td><td>우리 결론</td></tr>
+    </table>
+    <p class="sub">한 줄 원칙 (예: "가능하다 ≠ 지금 필요하다").</p>
+  </section>
+
+  <!-- ══════════════ 유형 E · 2단 + 리스크 리스트 ══════════════ -->
+  <section class="slide" id="s5">
+    <div class="kicker">04 · Feasibility &amp; Risk</div>
+    <h2>가능성 · 다음 주 리스크</h2>
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h3>⏱️ 왜 가능한가</h3>
+          <ul><li>근거 1</li><li>근거 2</li></ul>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <h3>🎯 왜 이 선택인가</h3>
+          <ul><li>근거 1</li><li>근거 2</li></ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="height:100%">
+          <h3>⚠️ 다음 주 리스크</h3>
+          <ul class="pill-list risk" style="margin-top:4px">
+            <li><b>리스크 1</b> — 무엇이 미정인지</li>
+            <li><b>리스크 2</b> — 결정 필요 지점</li>
+            <li><b>리스크 3</b> — 재설계/막힘 가능성</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="footer">
+  <span class="brand">프로젝트명 · WeekNN</span>   <!-- ← 수정 -->
+  <span class="spacer"></span>
+  <span class="dots" id="dots"></span>
+  <span id="page" style="margin-left:16px">1 / 1</span>
+</div>
+
+<script>
+  // 이 스크립트는 수정할 필요 없음 — 슬라이드 수/점/페이지를 자동 계산
+  const slides = [...document.querySelectorAll('.slide')];
+  const dotsBox = document.getElementById('dots');
+  const pageEl = document.getElementById('page');
+  let i = 0;
+  slides.forEach((_, k) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (k === 0 ? ' on' : '');
+    dotsBox.appendChild(d);
+  });
+  const dots = [...dotsBox.children];
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+    pageEl.textContent = (i + 1) + ' / ' + slides.length;
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { show(i + 1); e.preventDefault(); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { show(i - 1); e.preventDefault(); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('a')) show(i + 1); });
+  show(0);
+</script>
+</body>
+</html>
