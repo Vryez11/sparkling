@@ -32,3 +32,93 @@
 | GET | `/comments/{postid}` | 댓글 조회 | 공개 |
 | POST | `/comments/{postid}` | 댓글 작성 | 인증 |
 | DELETE | `/comments/{postid}/{commentid}` | 댓글 삭제 | 인증 |
+
+# API 요청/응답 JSON
+
+## 1. 로그인
+
+### `POST /users/login`
+
+### 요청 JSON
+
+```json
+{
+  "data": {
+    "email": "이메일",
+    "password": "비밀번호"
+  },
+  "date": "2026-07-10T21:36:35"
+}
+```
+
+### 응답 JSON
+
+```json
+{
+  "success": "true",
+  "date": "2026-07-10T21:36:37"
+}
+```
+```json
+{
+  "success": "false",
+  "message": "이유",
+  "date": "2026-07-10T21:36:37"
+}
+```
+
+## 2. 게시글 등록
+
+### `POST /posts`
+
+### 요청 JSON
+
+```json
+{
+  "data": {
+    "title": "게시글 제목",
+    "content": "게시글 내용",
+    "hashtag": ["해시태그1", "해시태그2", "해시태그3"]
+  },
+  "date": "2026-07-10T21:37:05"
+}
+```
+
+### 응답 JSON
+
+```json
+{
+  "success": "true",
+  "date": "2026-07-10T21:36:37"
+}
+```
+```json
+{
+  "success": "false",
+  "message": "이유",
+  "date": "2026-07-10T21:36:37"
+}
+```
+
+## 3. 댓글 조회
+
+### `GET /comment/{postid}`
+
+### 응답 JSON
+
+```json
+{
+  "data": {
+    "comments": [{
+      "content": "댓글1",
+      "author": "작성자1",
+      "date": "작성 날짜1"
+    }, {
+      "content": "댓글2",
+      "author": "작성자2",
+      "date": "작성 날짜2"
+    }]
+  },
+  "date": "2026-07-10T22:12:43"
+}
+```
