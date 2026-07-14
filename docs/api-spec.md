@@ -64,6 +64,8 @@ Authorization: Bearer {accessToken}
 | POST | `/auth/login` | 로그인 | 공개 |
 | POST | `/users`      | 회원가입 | 공개 |
 | GET  | `/users/me`   | 내 정보 조회 | 인증 |
+| GET  | `/users/{userId}` | 사용자 프로필 조회 | 공개 |
+| GET  | `/users?keyword=닉네임` | 사용자 검색 | 공개 |
 
 ## 게시글 (posts)
 
@@ -74,8 +76,12 @@ Authorization: Bearer {accessToken}
 | GET | `/posts/{postId}` | 상세 게시글 조회 | 공개 |
 | PATCH | `/posts/{postId}` | 게시글 수정 | 인증(본인) |
 | DELETE | `/posts/{postId}` | 게시글 삭제 | 인증(본인) |
+| POST | `/posts/{postId}/likes` | 게시글 좋아요 등록 | 인증 |
+| DELETE | `/posts/{postId}/likes` | 게시글 좋아요 취소 | 인증 |
 
 > `GET /posts?author=me`는 별도 API가 아니라 게시글 목록 조회의 필터 옵션이다. `author=me`를 사용할 때만 인증이 필요하다.
+>
+> 검색도 게시글 목록 조회의 쿼리 파라미터로 처리한다: `GET /posts?category={title|content|hashtag}&keyword=검색어`. 해시태그 검색은 제목/내용 검색과 분리된 별도 카테고리다. 사용자 검색은 게시글 검색에 섞지 않고 별도 API(`GET /users?keyword=`)로 분리한다.
 
 ## 댓글 (comments)
 
@@ -86,6 +92,20 @@ Authorization: Bearer {accessToken}
 | GET | `/posts/{postId}/comments` | 댓글 조회 | 공개 |
 | POST | `/posts/{postId}/comments` | 댓글 작성 | 인증 |
 | DELETE | `/comments/{commentId}` | 댓글 삭제 | 인증(본인) |
+| POST | `/comments/{commentId}/likes` | 댓글 좋아요 등록 | 인증 |
+| DELETE | `/comments/{commentId}/likes` | 댓글 좋아요 취소 | 인증 |
+
+## 채팅 (chat)
+
+1:1 채팅은 REST API가 아니라 **WebSocket**으로 처리한다.
+
+- 온라인 상태는 별도 폴링 없이 WebSocket 연결 여부로 판단한다. 채팅 구조상 WebSocket이 필수이고, 온라인 상태의 정확성이 중요하기 때문이다.
+- 채팅 상대는 게시글/댓글 응답의 `authorId`로 특정한다.
+- 오프라인 상대와는 채팅방 연결이 되지 않는다. 연결 요청 후 30초 안에 상대방이 수락하지 않으면 타임아웃으로 연결 시도를 완전히 종료한다.
+- 채팅 세션은 유저 단위가 아니라 **디바이스 단위**로 관리한다. 채팅 요청 시 상대방의 연결된 모든 디바이스에 요청 메시지를 푸시하고, 최초로 연결한 디바이스와 채팅을 연결한다.
+- 채팅 **메시지 내용**은 서버에 저장하지 않는다 (온라인 기반 실시간 중계만). 단, 오프라인 상대에게 전달할 **대기 중인 채팅 요청 상태**는 상대가 온라인이 될 때까지 저장한다.
+
+상세 흐름은 `user-scenarios.md`의 시나리오 5 참고.
 
 # API 요청/응답 JSON
 
@@ -162,11 +182,63 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 4. 게시글 목록 조회
+## 4. 사용자 프로필 조회
+
+### `GET /users/{userId}`
+
+게시글/댓글 응답의 `authorId`로 작성자 프로필을 조회한다. 1:1 채팅 진입 시 상대방을 특정할 때도 사용한다.
+
+### 응답 JSON — 200 OK
+
+```json
+{
+  "success": true,
+  "data": {
+    "userId": 2,
+    "nickname": "닉네임"
+  },
+  "date": "2026-07-10T21:36:37"
+}
+```
+
+## 5. 사용자 검색
+
+### `GET /users?keyword=닉네임`
+
+닉네임으로 사용자 프로필을 검색한다. 검색 결과의 프로필에서 1:1 채팅으로 진입할 수 있다. 결과가 없으면 오류가 아니라 빈 목록(`"users": []`)을 200 OK로 반환한다.
+
+### 응답 JSON — 200 OK
+
+```json
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "userId": 2,
+        "nickname": "닉네임"
+      }
+    ]
+  },
+  "date": "2026-07-10T21:36:37"
+}
+```
+
+## 6. 게시글 목록 조회
 
 ### `GET /posts`
 
-`author=me` 쿼리 파라미터를 붙이면 내 게시글만 조회한다(인증 필요).
+쿼리 파라미터:
+
+| 파라미터 | 설명 |
+|---|---|
+| `author=me` | 내 게시글만 조회 (인증 필요) |
+| `category` | 검색 카테고리: `title`(제목), `content`(내용), `hashtag`(해시태그) |
+| `keyword` | 검색어. `category`와 함께 사용한다 |
+
+검색 결과가 없는 경우 오류가 아니라 빈 목록(`"posts": []`)을 200 OK로 반환한다. 클라이언트는 alert 대신 빈 게시글 목록을 보여준다.
+
+`liked`는 요청자가 그 게시글에 좋아요를 눌렀는지 여부로, 비로그인 조회 시 항상 `false`다. (상세 조회 응답도 동일)
 
 ### 응답 JSON — 200 OK
 
@@ -178,7 +250,10 @@ Authorization: Bearer {accessToken}
       {
         "postId": 1,
         "title": "게시글 제목",
+        "authorId": 2,
         "author": "작성자 닉네임",
+        "likeCount": 3,
+        "liked": false,
         "createdAt": "2026-07-10T21:37:05"
       }
     ]
@@ -187,17 +262,18 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 5. 게시글 등록
+## 7. 게시글 등록
 
 ### `POST /posts`
 
 ### 요청 JSON
 
+해시태그는 별도 필드로 보내지 않고 내용 안에 `#` 으로 작성한다. 서버가 저장 시 내용에서 해시태그를 파싱해 게시글과 매핑한다. (클라이언트 파싱 결과는 신뢰할 수 없고, 해시태그를 실제로 사용하는 쪽이 서버이기 때문)
+
 ```json
 {
   "title": "게시글 제목",
-  "content": "게시글 내용",
-  "hashtags": ["해시태그1", "해시태그2", "해시태그3"]
+  "content": "게시글 내용 #해시태그1 #해시태그2"
 }
 ```
 
@@ -215,7 +291,7 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 6. 상세 게시글 조회
+## 8. 상세 게시글 조회
 
 ### `GET /posts/{postId}`
 
@@ -229,26 +305,28 @@ Authorization: Bearer {accessToken}
     "title": "게시글 제목",
     "content": "게시글 내용",
     "hashtags": ["해시태그1", "해시태그2"],
+    "authorId": 2,
     "author": "작성자 닉네임",
+    "likeCount": 3,
+    "liked": false,
     "createdAt": "2026-07-10T21:37:05"
   },
   "date": "2026-07-10T22:12:43"
 }
 ```
 
-## 7. 게시글 수정
+## 9. 게시글 수정
 
 ### `PATCH /posts/{postId}`
 
-수정할 필드만 담아 보낸다.
+수정할 필드만 담아 보낸다. 해시태그는 등록과 마찬가지로 내용 안에 `#` 으로 작성하며, 서버가 다시 파싱한다.
 
 ### 요청 JSON
 
 ```json
 {
   "title": "수정된 제목",
-  "content": "수정된 내용",
-  "hashtags": ["수정된 해시태그"]
+  "content": "수정된 내용 #수정된해시태그"
 }
 ```
 
@@ -264,7 +342,7 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 8. 게시글 삭제
+## 10. 게시글 삭제
 
 ### `DELETE /posts/{postId}`
 
@@ -278,13 +356,13 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 9. 댓글 조회
+## 11. 댓글 조회
 
 ### `GET /posts/{postId}/comments`
 
 ### 응답 JSON — 200 OK
 
-`commentId`를 포함해 클라이언트가 삭제 요청 시 사용할 수 있게 한다.
+`commentId`를 포함해 클라이언트가 삭제·좋아요·대댓글 요청 시 사용할 수 있게 한다. 대댓글은 부모 댓글의 `replies` 배열에 중첩해 반환한다(depth 1 고정이므로 중첩은 1단까지). `liked`는 요청자가 그 댓글에 좋아요를 눌렀는지 여부로, 비로그인 조회 시 항상 `false`다.
 
 ```json
 {
@@ -294,14 +372,32 @@ Authorization: Bearer {accessToken}
       {
         "commentId": 1,
         "content": "댓글1",
+        "authorId": 2,
         "author": "작성자1",
-        "createdAt": "2026-07-10T22:10:01"
+        "likeCount": 3,
+        "liked": true,
+        "createdAt": "2026-07-10T22:10:01",
+        "replies": [
+          {
+            "commentId": 5,
+            "content": "대댓글1",
+            "authorId": 4,
+            "author": "작성자3",
+            "likeCount": 0,
+            "liked": false,
+            "createdAt": "2026-07-10T22:11:02"
+          }
+        ]
       },
       {
         "commentId": 2,
         "content": "댓글2",
+        "authorId": 3,
         "author": "작성자2",
-        "createdAt": "2026-07-10T22:11:30"
+        "likeCount": 0,
+        "liked": false,
+        "createdAt": "2026-07-10T22:11:30",
+        "replies": []
       }
     ]
   },
@@ -309,15 +405,18 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 10. 댓글 작성
+## 12. 댓글 작성
 
 ### `POST /posts/{postId}/comments`
 
 ### 요청 JSON
 
+대댓글은 `parentCommentId`에 부모 댓글 ID를 담아 보낸다. 필드를 생략하면 일반 댓글이다. 부모가 이미 대댓글인 경우(depth 초과)는 400 Bad Request로 거절한다.
+
 ```json
 {
-  "content": "댓글 내용"
+  "content": "댓글 내용",
+  "parentCommentId": 1
 }
 ```
 
@@ -333,7 +432,7 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 11. 댓글 삭제
+## 13. 댓글 삭제
 
 ### `DELETE /comments/{commentId}`
 
@@ -344,5 +443,28 @@ Authorization: Bearer {accessToken}
   "success": true,
   "data": null,
   "date": "2026-07-10T22:15:00"
+}
+```
+
+## 14. 좋아요 등록 / 취소 (게시글 · 댓글)
+
+### `POST /posts/{postId}/likes` · `DELETE /posts/{postId}/likes`
+### `POST /comments/{commentId}/likes` · `DELETE /comments/{commentId}/likes`
+
+게시글과 댓글 모두 같은 방식이다. 등록과 취소 모두 **멱등**이다 — 이미 좋아요를 누른 상태에서 다시 등록해도 개수는 변하지 않고, 누르지 않은 상태에서 취소해도 오류가 아니다. 요청 본문은 없다.
+
+### 응답 JSON — 200 OK
+
+등록(`POST`)과 취소(`DELETE`) 모두 반영된 최신 상태를 반환한다. 댓글 좋아요의 예시이며, 게시글 좋아요는 `commentId` 대신 `postId`를 반환한다.
+
+```json
+{
+  "success": true,
+  "data": {
+    "commentId": 1,
+    "likeCount": 4,
+    "liked": true
+  },
+  "date": "2026-07-10T22:13:00"
 }
 ```
