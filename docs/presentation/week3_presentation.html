@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sparkling · Week-03 발표자료</title>
+<style>
+  :root {
+    --bg: #0e1016;
+    --card: #171a24;
+    --fg: #e7e9f0;
+    --muted: #9aa0b4;
+    --accent: #8b7cf6;
+    --accent2: #f6c453;
+    --line: #262a38;
+    --good: #56d6a0;
+    --warn: #f68b6c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .deck { height: 100vh; overflow: hidden; }
+  .slide {
+    display: none;
+    height: 100vh;
+    padding: 6vh 8vw;
+    flex-direction: column;
+    animation: fade .35s ease;
+  }
+  .slide.active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .kicker {
+    font-size: 15px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 14px;
+  }
+  h1 { font-size: 52px; line-height: 1.15; font-weight: 800; letter-spacing: -.02em; }
+  h2 { font-size: 38px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; margin-bottom: 26px; }
+  .sub { color: var(--muted); font-size: 20px; margin-top: 18px; line-height: 1.6; }
+
+  .grid { display: grid; gap: 18px; margin-top: 8px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 22px 24px;
+  }
+  .card h3 { font-size: 19px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .card p, .card li { font-size: 16.5px; color: var(--muted); line-height: 1.6; }
+  .card ul { padding-left: 18px; }
+  .card li { margin: 5px 0; }
+  .tag {
+    display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px;
+    border-radius: 999px; background: rgba(139,124,246,.16); color: var(--accent);
+    margin-bottom: 12px; letter-spacing: .04em;
+  }
+  .pick { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .pick .tag { background: var(--accent); color: #12121a; }
+
+  .row { display: flex; gap: 20px; align-items: stretch; }
+  .col { flex: 1; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th, td { text-align: left; padding: 12px 14px; font-size: 16.5px; border-bottom: 1px solid var(--line); }
+  th { color: var(--accent); font-size: 14px; letter-spacing: .04em; }
+  td { color: var(--fg); }
+  td.q { color: var(--muted); }
+
+  .chk { color: var(--good); font-weight: 800; }
+  .no  { color: var(--warn); font-weight: 800; }
+
+  .pill-list { list-style: none; padding: 0; }
+  .pill-list li {
+    background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 10px; padding: 14px 18px; margin: 10px 0; font-size: 17px; line-height: 1.5;
+  }
+  .pill-list li b { color: var(--fg); }
+  .risk li { border-left-color: var(--warn); }
+
+  code { color: var(--accent2); font-family: "JetBrains Mono", Consolas, monospace; font-size: .92em; }
+
+  .footer {
+    position: fixed; bottom: 20px; left: 8vw; right: 8vw;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--muted); font-size: 14px;
+  }
+  .footer .dots { display: flex; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+  .dot.on { background: var(--accent); }
+  .brand { font-weight: 800; color: var(--fg); }
+  .spacer { flex: 1; }
+
+  #s1 { justify-content: center; }
+  .cover-meta { margin-top: 40px; display: flex; gap: 40px; color: var(--muted); font-size: 17px; }
+  .cover-meta b { color: var(--fg); }
+
+  /* Week-03 전용: ERD + 스키마 슬라이드 */
+  .erd-img {
+    width: 100%; height: 100%; object-fit: contain;
+    border-radius: 12px; background: #fff;
+  }
+  .schema-table th, .schema-table td { padding: 7px 10px; font-size: 13.5px; }
+  .schema-table td.q { white-space: nowrap; font-weight: 700; color: var(--fg); }
+  .schema-table td { color: var(--muted); line-height: 1.7; }
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .03em;
+    padding: 1px 5px; border-radius: 4px; vertical-align: 1px; margin-left: 1px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+  }
+  .b-pk { background: rgba(139,124,246,.22); color: var(--accent); }
+  .b-fk { background: rgba(246,196,83,.16); color: var(--accent2); }
+  .b-uq { background: rgba(86,214,160,.16); color: var(--good); }
+
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    .deck { height: auto; overflow: visible; }
+    .slide { display: flex !important; height: 720px; width: 1280px; page-break-after: always; animation: none; }
+    .footer { position: absolute; }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- SLIDE 1 : 표지 -->
+  <section class="slide active" id="s1">
+    <div class="kicker">Week 03 · 진행 발표</div>
+    <h1>Sparkling ✨<br><span style="color:var(--accent)">ERD · 스키마 · 마이그레이션</span></h1>
+    <p class="sub">데이터 모델을 그림에서 실제 테이블로</p>
+    <div class="cover-meta">
+      <div><b>스택</b><br>Java 21 · Spring Boot · Security · JPA · MySQL</div>
+      <div><b>이번 주</b><br>ERD 확정 · 스키마 문서화 · JPA 엔티티</div>
+      <div><b>소개</b><br>번뜩이는 아이디어/생각 공유하는 SNS</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 : ERD + 테이블 스키마 -->
+  <section class="slide" id="s2">
+    <div class="kicker">01 · ERD &amp; Schema</div>
+    <h2>ERD &amp; 테이블 스키마</h2>
+    <div class="row" style="flex:1; min-height:0">
+      <div class="col" style="flex:1.5; min-width:0">
+        <img class="erd-img" src="../sparkling_erd.png" alt="Sparkling ERD">
+      </div>
+      <div class="col" style="flex:1">
+        <table class="schema-table">
+          <tr><th>테이블</th><th>컬럼</th></tr>
+          <tr><td class="q">users</td><td>id<span class="badge b-pk">PK</span>, nickname<span class="badge b-uq">UQ</span>, email<span class="badge b-uq">UQ</span>, password, timestamps</td></tr>
+          <tr><td class="q">posts</td><td>id<span class="badge b-pk">PK</span>, title, content, <code>user_id</code><span class="badge b-fk">FK</span>, timestamps</td></tr>
+          <tr><td class="q">comments</td><td>id<span class="badge b-pk">PK</span>, content, <code>user_id</code><span class="badge b-fk">FK</span>, <code>post_id</code><span class="badge b-fk">FK</span>, <code>parent_comment_id</code><span class="badge b-fk">FK</span></td></tr>
+          <tr><td class="q">post_likes</td><td>id<span class="badge b-pk">PK</span>, <code>user_id</code><span class="badge b-fk">FK</span>, <code>post_id</code><span class="badge b-fk">FK</span> · <span class="badge b-uq">UQ</span>(user, post)</td></tr>
+          <tr><td class="q">comment_likes</td><td>id<span class="badge b-pk">PK</span>, <code>user_id</code><span class="badge b-fk">FK</span>, <code>comment_id</code><span class="badge b-fk">FK</span> · <span class="badge b-uq">UQ</span>(user, comment)</td></tr>
+          <tr><td class="q">hashtags</td><td>id<span class="badge b-pk">PK</span>, name<span class="badge b-uq">UQ</span></td></tr>
+          <tr><td class="q">post_hashtag</td><td>id<span class="badge b-pk">PK</span>, <code>post_id</code><span class="badge b-fk">FK</span>, <code>hashtag_id</code><span class="badge b-fk">FK</span> · <span class="badge b-uq">UQ</span>(post, hashtag)</td></tr>
+          <tr><td class="q">chat_requests</td><td>id<span class="badge b-pk">PK</span>, <code>request_user_id</code><span class="badge b-fk">FK</span>, <code>response_user_id</code><span class="badge b-fk">FK</span>, status, timestamps</td></tr>
+        </table>
+        <p style="margin-top:10px; font-size:12.5px; color:var(--muted)">
+          <span class="badge b-pk">PK</span> 기본키 ·
+          <span class="badge b-fk">FK</span> 외래키 ·
+          <span class="badge b-uq">UQ</span> 유니크
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 : 중요한 관계 3개 -->
+  <section class="slide" id="s3">
+    <div class="kicker">02 · Key Relationships</div>
+    <h2>ERD에서 중요한 관계 3개</h2>
+    <div class="grid g3">
+      <div class="card">
+        <span class="tag">셀프 조인</span>
+        <h3>💬 comments → comments</h3>
+        <ul>
+          <li><code>parent_comment_id</code>가 같은 테이블의 <code>id</code>를 참조</li>
+          <li>대댓글을 별도 테이블 없이 표현</li>
+          <li>최상위 댓글은 <code>NULL</code>, 대댓글은 부모 댓글을 가리킴</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">한 테이블에 FK 2개</span>
+        <h3>🤝 chat_requests → users</h3>
+        <ul>
+          <li><code>request_user_id</code> / <code>response_user_id</code> 둘 다 <code>users.id</code> 참조</li>
+          <li>같은 users를 <b>역할이 다른 두 관점</b>으로 참조 (보낸 사람 / 받은 사람)</li>
+          <li>조회 시 users를 두 번 조인</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">N:M 해소</span>
+        <h3>🏷️ posts ↔ hashtags</h3>
+        <ul>
+          <li>게시글 하나에 태그 여러 개, 태그 하나에 게시글 여러 개 → <b>N:M</b></li>
+          <li>중간 테이블 <code>post_hashtag</code>로 1:N + N:1 두 개로 분해</li>
+          <li><code>UNIQUE(post_id, hashtag_id)</code>로 중복 연결 방지</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 : 좋아요/댓글/게시글 분리 이유 -->
+  <section class="slide" id="s4">
+    <div class="kicker">03 · Design Decision</div>
+    <h2>좋아요/댓글/게시글을 이렇게 나눈 이유</h2>
+    <div class="grid g2">
+      <div class="card">
+        <span class="tag">게시글 좋아요</span>
+        <h3>👍 posts에 카운트 컬럼? → 테이블 분리</h3>
+        <ul>
+          <li>처음엔 <code>posts.like_count</code>로 바로 세는 것도 고려</li>
+          <li>하지만 <b>"누가" 눌렀는지</b> 확인해야 하는 상황이 있음 — 중복 좋아요 방지, 좋아요 취소, 내가 누른 글 확인</li>
+          <li>카운트만 저장하면 "누가"가 사라짐 → <code>post_likes</code>로 분리</li>
+          <li>카운트는 <code>COUNT(*)</code>로 언제든 계산 가능</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">댓글 좋아요</span>
+        <h3>💬 댓글도 같은 논리로 분리</h3>
+        <ul>
+          <li>댓글에도 좋아요 기능이 필요</li>
+          <li>같은 이유로 <code>comments</code>와 <code>comment_likes</code>를 분리</li>
+          <li>대상만 다를 뿐 구조는 <code>post_likes</code>와 동일 (user + 대상 + UNIQUE)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="sub">→ <b>집계는 계산으로, "누가 했는가"는 행(row)으로 남긴다.</b></p>
+  </section>
+
+  <!-- SLIDE 5 : 조사 내용 (작성 예정) -->
+  <section class="slide" id="s5">
+    <div class="kicker">04 · Research</div>
+    <h2>조사 내용</h2>
+  </section>
+
+</div>
+
+<div class="footer">
+  <span class="brand">Sparkling ✨ · Week-03</span>
+  <span class="spacer"></span>
+  <span class="dots" id="dots"></span>
+  <span id="page" style="margin-left:16px">1 / 5</span>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const dotsBox = document.getElementById('dots');
+  const pageEl = document.getElementById('page');
+  let i = 0;
+  slides.forEach((_, k) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (k === 0 ? ' on' : '');
+    dotsBox.appendChild(d);
+  });
+  const dots = [...dotsBox.children];
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+    pageEl.textContent = (i + 1) + ' / ' + slides.length;
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { show(i + 1); e.preventDefault(); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { show(i - 1); e.preventDefault(); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('a')) show(i + 1); });
+  show(0);
+</script>
+</body>
+</html>
