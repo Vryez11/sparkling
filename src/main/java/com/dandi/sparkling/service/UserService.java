@@ -20,7 +20,7 @@ public class UserService {
     public UserRegisterResponse register(UserRegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("존재하는 이메일입니다. ");
+            throw new RuntimeException("존재하는 이메일입니다.");
         }
 
         if (userRepository.existsByNickname(request.getNickname())) {
@@ -35,6 +35,6 @@ public class UserService {
                 .password(encoded)
                 .build();
 
-        return new UserRegisterResponse().from(userRepository.save(user));
+        return UserRegisterResponse.from(userRepository.save(user));
     }
 }
