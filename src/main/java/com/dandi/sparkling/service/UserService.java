@@ -1,5 +1,6 @@
 package com.dandi.sparkling.service;
 
+import com.dandi.sparkling.dto.UserMeResponse;
 import com.dandi.sparkling.dto.UserRegisterRequest;
 import com.dandi.sparkling.dto.UserRegisterResponse;
 import com.dandi.sparkling.entity.User;
@@ -36,5 +37,14 @@ public class UserService {
                 .build();
 
         return UserRegisterResponse.from(userRepository.save(user));
+    }
+
+    @Transactional(readOnly = true)
+    public UserMeResponse getMyInfo(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+
+        return UserMeResponse.from(user);
     }
 }
