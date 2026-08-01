@@ -1,4 +1,4 @@
-package com.dandi.sparkling.security;
+package com.dandi.sparkling.config.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -30,5 +30,17 @@ public class JwtProvider {
                 .expiration(new Date(now.getTime() + expirationMs))
                 .signWith(key)
                 .compact();
+    }
+
+    public Long getUserId(String token) {
+
+        return Long.valueOf(
+                Jwts.parser()
+                        .verifyWith(key)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload()
+                        .getSubject()
+        );
     }
 }

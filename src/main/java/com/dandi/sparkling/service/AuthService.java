@@ -4,7 +4,7 @@ import com.dandi.sparkling.dto.LoginRequest;
 import com.dandi.sparkling.dto.LoginResponse;
 import com.dandi.sparkling.entity.User;
 import com.dandi.sparkling.repository.UserRepository;
-import com.dandi.sparkling.security.JwtProvider;
+import com.dandi.sparkling.config.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
