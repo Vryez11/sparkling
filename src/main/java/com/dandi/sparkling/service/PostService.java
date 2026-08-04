@@ -2,6 +2,7 @@ package com.dandi.sparkling.service;
 
 import com.dandi.sparkling.dto.CreatePostRequest;
 import com.dandi.sparkling.dto.CreatePostResponse;
+import com.dandi.sparkling.dto.PostDetailResponse;
 import com.dandi.sparkling.dto.PostResponse;
 import com.dandi.sparkling.entity.Post;
 import com.dandi.sparkling.entity.User;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +38,7 @@ public class PostService {
         return CreatePostResponse.from(postRepository.save(post).getId());
     }
 
-    @Transactional()
+    @Transactional
     public List<PostResponse> getPostList() {
 
         List<Post> all = postRepository.findAll();
@@ -56,5 +58,14 @@ public class PostService {
         }
 
         return posts;
+    }
+
+    @Transactional
+    public PostDetailResponse postDetail(long postId) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("해당 Post를 찾을 수 없습니다."));
+
+        return PostDetailResponse.from(post);
     }
 }

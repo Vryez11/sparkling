@@ -1,9 +1,6 @@
 package com.dandi.sparkling.controller;
 
-import com.dandi.sparkling.dto.CreatePostRequest;
-import com.dandi.sparkling.dto.CreatePostResponse;
-import com.dandi.sparkling.dto.GetPostListResponse;
-import com.dandi.sparkling.dto.PostResponse;
+import com.dandi.sparkling.dto.*;
 import com.dandi.sparkling.service.PostService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -40,5 +37,16 @@ public class PostController {
 
         return ResponseEntity
                 .ok(GetPostListResponse.from(posts));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PostDetailResponse> post(
+            @PathVariable("id") Long postId
+    ) {
+
+        PostDetailResponse response = postService.postDetail(postId);
+
+        return ResponseEntity
+                .ok(response);
     }
 }
