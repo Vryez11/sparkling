@@ -1,29 +1,23 @@
-package com.dandi.sparkling.layered.controller;
+package com.dandi.sparkling.auth.login;
 
-import com.dandi.sparkling.layered.dto.LoginRequest;
-import com.dandi.sparkling.layered.dto.LoginResponse;
-import com.dandi.sparkling.layered.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class LoginEndPoint {
 
-    private final AuthService authService;
+    private final LoginHandler loginHandler;
 
-    @PostMapping
+    @PostMapping("/auth")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
-
-        LoginResponse response = authService.login(request);
+        LoginResponse response = loginHandler.login(request);
 
         return ResponseEntity
                 .ok()

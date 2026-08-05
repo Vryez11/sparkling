@@ -1,4 +1,4 @@
-package com.dandi.sparkling.layered.dto;
+package com.dandi.sparkling.user.getme;
 
 import com.dandi.sparkling.user.share.User;
 import lombok.Data;
@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class UserMeResponse {
+public class GetMeResponse {
 
     private Long id;
 
@@ -16,9 +16,9 @@ public class UserMeResponse {
 
     private LocalDateTime createdAt;
 
-    public static UserMeResponse from(User user) {
+    public static GetMeResponse from(User user) {
 
-        UserMeResponse response = new UserMeResponse();
+        GetMeResponse response = new GetMeResponse();
 
         response.setId(user.getId());
         response.setNickname(user.getNickname());

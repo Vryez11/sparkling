@@ -1,5 +1,4 @@
-package com.dandi.sparkling.layered.dto;
-
+package com.dandi.sparkling.user.register;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -7,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class UserRegisterRequest {
+public class RegisterRequest {
 
     @NotBlank
     @Size(min = 2, max = 100)

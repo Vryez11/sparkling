@@ -1,17 +1,15 @@
-package com.dandi.sparkling.layered.service;
+package com.dandi.sparkling.auth.login;
 
-import com.dandi.sparkling.layered.dto.LoginRequest;
-import com.dandi.sparkling.layered.dto.LoginResponse;
+import com.dandi.sparkling.config.security.JwtProvider;
 import com.dandi.sparkling.user.share.User;
 import com.dandi.sparkling.user.share.UserRepository;
-import com.dandi.sparkling.config.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class LoginHandler {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

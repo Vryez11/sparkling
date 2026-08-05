@@ -1,10 +1,10 @@
-package com.dandi.sparkling.layered.dto;
+package com.dandi.sparkling.user.register;
 
 import com.dandi.sparkling.user.share.User;
 import lombok.Data;
 
 @Data
-public class UserRegisterResponse {
+public class RegisterResponse {
 
     private Long id;
 
@@ -12,9 +12,9 @@ public class UserRegisterResponse {
 
     private String email;
 
-    public static UserRegisterResponse from (User user) {
+    public static RegisterResponse from(User user) {
 
-        UserRegisterResponse response = new UserRegisterResponse();
+        RegisterResponse response = new RegisterResponse();
 
         response.setId(user.getId());
         response.setEmail(user.getEmail());

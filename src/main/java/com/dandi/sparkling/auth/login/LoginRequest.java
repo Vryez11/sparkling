@@ -1,4 +1,4 @@
-package com.dandi.sparkling.layered.dto;
+package com.dandi.sparkling.auth.login;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

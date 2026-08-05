@@ -1,4 +1,4 @@
-package com.dandi.sparkling.layered.dto;
+package com.dandi.sparkling.auth.login;
 
 import com.dandi.sparkling.user.share.User;
 import lombok.Data;
@@ -12,7 +12,7 @@ public class LoginResponse {
 
     private String email;
 
-    public static LoginResponse from (User user, String accessToken) {
+    public static LoginResponse from(User user, String accessToken) {
 
         LoginResponse response = new LoginResponse();
 

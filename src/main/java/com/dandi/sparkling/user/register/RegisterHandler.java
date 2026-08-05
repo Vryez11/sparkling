@@ -1,8 +1,5 @@
-package com.dandi.sparkling.layered.service;
+package com.dandi.sparkling.user.register;
 
-import com.dandi.sparkling.layered.dto.UserMeResponse;
-import com.dandi.sparkling.layered.dto.UserRegisterRequest;
-import com.dandi.sparkling.layered.dto.UserRegisterResponse;
 import com.dandi.sparkling.user.share.User;
 import com.dandi.sparkling.user.share.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class RegisterHandler {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserRegisterResponse register(UserRegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("존재하는 이메일입니다.");
@@ -36,15 +33,6 @@ public class UserService {
                 .password(encoded)
                 .build();
 
-        return UserRegisterResponse.from(userRepository.save(user));
-    }
-
-    @Transactional(readOnly = true)
-    public UserMeResponse getMyInfo(Long userId) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
-
-        return UserMeResponse.from(user);
+        return RegisterResponse.from(userRepository.save(user));
     }
 }
