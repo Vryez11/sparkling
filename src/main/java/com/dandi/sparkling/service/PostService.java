@@ -87,4 +87,23 @@ public class PostService {
 
         return PostDetailResponse.from(post);
     }
+
+    @Transactional
+    public DeletePostResponse delete(Long userid, Long postId) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("해당 Post를 찾을 수 없습니다."));
+
+        if (!post.getUser().getId().equals(userid)) {
+            throw new RuntimeException("해당 게시글에 권한이 없습니다.");
+        }
+
+        if (post.getDeletedAt() != null) {
+            throw new RuntimeException("이미 삭제된 게시글 입니다.");
+        }
+
+        post.delete();
+
+        return DeletePostResponse.from(post.getId(), post.getDeletedAt());
+    }
 }

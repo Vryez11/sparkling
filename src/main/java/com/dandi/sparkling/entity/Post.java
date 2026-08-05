@@ -1,5 +1,6 @@
 package com.dandi.sparkling.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -48,6 +49,9 @@ public class Post {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Builder
     private Post(String title, String content, User user) {
 
@@ -56,13 +60,15 @@ public class Post {
         this.user = user;
     }
 
-    public void updateTitle(String title) {
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
 
+    public void updateTitle(String title) {
         this.title = title;
     }
 
     public void updateContent(String content) {
-
         this.content = content;
     }
 }
