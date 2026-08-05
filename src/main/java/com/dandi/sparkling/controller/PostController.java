@@ -1,6 +1,7 @@
 package com.dandi.sparkling.controller;
 
 import com.dandi.sparkling.dto.*;
+import com.dandi.sparkling.entity.Post;
 import com.dandi.sparkling.service.PostService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -45,6 +46,19 @@ public class PostController {
     ) {
 
         PostDetailResponse response = postService.postDetail(postId);
+
+        return ResponseEntity
+                .ok(response);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<PostDetailResponse> update(
+            @PathVariable("id") Long postId,
+            @AuthenticationPrincipal Long userId,
+            @RequestBody UpdatePostRequest request
+    ) {
+
+        PostDetailResponse response = postService.updatePost(userId, postId, request);
 
         return ResponseEntity
                 .ok(response);

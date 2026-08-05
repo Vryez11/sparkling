@@ -1,9 +1,6 @@
 package com.dandi.sparkling.service;
 
-import com.dandi.sparkling.dto.CreatePostRequest;
-import com.dandi.sparkling.dto.CreatePostResponse;
-import com.dandi.sparkling.dto.PostDetailResponse;
-import com.dandi.sparkling.dto.PostResponse;
+import com.dandi.sparkling.dto.*;
 import com.dandi.sparkling.entity.Post;
 import com.dandi.sparkling.entity.User;
 import com.dandi.sparkling.repository.PostRepository;
@@ -14,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +61,29 @@ public class PostService {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("해당 Post를 찾을 수 없습니다."));
+
+        return PostDetailResponse.from(post);
+    }
+
+    @Transactional
+    public PostDetailResponse updatePost(Long userId, Long postId, UpdatePostRequest request) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("해당 Post를 찾을 수 없습니다."));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new RuntimeException("해당 게시글에 권한이 없습니다.");
+        }
+
+        String title = request.getTitle();
+        if (title != null && !title.trim().isBlank()) {
+            post.updateTitle(title);
+        }
+
+        String content = request.getContent();
+        if (content != null && !content.trim().isBlank()) {
+            post.updateContent(content);
+        }
 
         return PostDetailResponse.from(post);
     }
