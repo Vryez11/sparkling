@@ -1,5 +1,6 @@
 package com.dandi.sparkling.controller;
 
+import com.dandi.sparkling.config.security.CurrentUserId;
 import com.dandi.sparkling.dto.UserMeResponse;
 import com.dandi.sparkling.dto.UserRegisterRequest;
 import com.dandi.sparkling.dto.UserRegisterResponse;
@@ -8,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,7 +34,7 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserMeResponse> me(
-            @AuthenticationPrincipal Long userId
+            @CurrentUserId Long userId
     ) {
 
         return ResponseEntity

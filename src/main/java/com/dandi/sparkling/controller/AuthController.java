@@ -2,6 +2,8 @@ package com.dandi.sparkling.controller;
 
 import com.dandi.sparkling.dto.LoginRequest;
 import com.dandi.sparkling.dto.LoginResponse;
+import com.dandi.sparkling.dto.RefreshRequest;
+import com.dandi.sparkling.dto.RefreshResponse;
 import com.dandi.sparkling.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +20,24 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping
+    @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
 
         LoginResponse response = authService.login(request);
+
+        return ResponseEntity
+                .ok()
+                .body(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshResponse> refresh(
+            @Valid @RequestBody RefreshRequest request
+    ) {
+
+        RefreshResponse response = authService.refresh(request);
 
         return ResponseEntity
                 .ok()

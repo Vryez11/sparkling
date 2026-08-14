@@ -11,6 +11,16 @@
 | created_at | datetime | | 생성일시 |
 | updated_at | datetime | | 수정일시 |
 
+## refresh_tokens
+
+| 필드 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| id | bigint | PK | 리프레시 토큰 ID |
+| user_id | bigint | UNIQUE, NOT NULL | 사용자 ID (유저당 1행 — 새 로그인/재발급 시 교체) |
+| token | varchar(512) | NOT NULL | 리프레시 토큰 (JWT) |
+| created_at | datetime | | 생성일시 |
+| updated_at | datetime | | 수정일시 (마지막 회전 시각) |
+
 ## posts
 
 | 필드 | 타입 | 제약 | 설명 |

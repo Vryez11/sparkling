@@ -1,5 +1,6 @@
 package com.dandi.sparkling.controller;
 
+import com.dandi.sparkling.config.security.CurrentUserId;
 import com.dandi.sparkling.dto.*;
 import com.dandi.sparkling.entity.Post;
 import com.dandi.sparkling.service.PostService;
@@ -9,7 +10,6 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,7 +21,7 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<CreatePostResponse> post(
-            @AuthenticationPrincipal Long userId,
+            @CurrentUserId Long userId,
             @Valid @RequestBody CreatePostRequest request
     ) {
         CreatePostResponse response = postService.createPost(userId, request);
@@ -54,7 +54,7 @@ public class PostController {
     @PatchMapping("/{id}")
     public ResponseEntity<PostDetailResponse> update(
             @PathVariable("id") Long postId,
-            @AuthenticationPrincipal Long userId,
+            @CurrentUserId Long userId,
             @RequestBody UpdatePostRequest request
     ) {
 
@@ -67,7 +67,7 @@ public class PostController {
     @DeleteMapping("/{id}")
     public ResponseEntity<DeletePostResponse> delete(
             @PathVariable("id") Long postId,
-            @AuthenticationPrincipal Long userId
+            @CurrentUserId Long userId
     ) {
 
         DeletePostResponse response = postService.delete(userId, postId);

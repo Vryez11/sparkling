@@ -62,6 +62,7 @@ Authorization: Bearer {accessToken}
 | 메서드  | URI           | 설명 | 인증 |
 |------|---------------|---|---|
 | POST | `/auth/login` | 로그인 | 공개 |
+| POST | `/auth/refresh` | 액세스 토큰 재발급 | 공개 |
 | POST | `/users`      | 회원가입 | 공개 |
 | GET  | `/users/me`   | 내 정보 조회 | 인증 |
 | GET  | `/users/{userId}` | 사용자 프로필 조회 | 공개 |
@@ -126,17 +127,47 @@ Authorization: Bearer {accessToken}
 
 ### 응답 JSON — 200 OK
 
-이후 인증이 필요한 요청은 `accessToken`을 `Authorization` 헤더에 담아 보낸다.
+이후 인증이 필요한 요청은 `accessToken`을 `Authorization` 헤더에 담아 보낸다. `refreshToken`은 액세스 토큰 만료(30분) 후 재발급에 사용한다.
 
 ```json
 {
   "success": true,
   "data": {
-    "accessToken": "발급된 액세스 토큰"
+    "accessToken": "발급된 액세스 토큰",
+    "refreshToken": "발급된 리프레시 토큰",
+    "userId": 1,
+    "email": "이메일"
   },
   "date": "2026-07-10T21:36:37"
 }
 ```
+
+### `POST /auth/refresh` — 액세스 토큰 재발급
+
+리프레시 토큰으로 새 토큰 쌍을 발급받는다. 리프레시 토큰도 매번 새로 발급되며(회전), 이전 리프레시 토큰은 즉시 무효화된다. 이미 회전된 토큰을 다시 제시하면 탈취 의심으로 간주해 저장된 리프레시 토큰 자체를 폐기하므로, 재로그인해야 한다.
+
+### 요청 JSON
+
+```json
+{
+  "refreshToken": "로그인/재발급 시 받은 리프레시 토큰"
+}
+```
+
+### 응답 JSON — 200 OK
+
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "새 액세스 토큰",
+    "refreshToken": "새 리프레시 토큰"
+  },
+  "date": "2026-07-10T21:36:37"
+}
+```
+
+실패(서명 불일치/만료/회전된 토큰 재사용/액세스 토큰 제시)는 인증 실패로 처리한다.
 
 ## 2. 회원가입
 
