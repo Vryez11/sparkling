@@ -1,22 +1,21 @@
 package com.dandi.sparkling.dto;
 
-import lombok.Data;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
 public class DeletePostResponse {
 
-    Long postId;
+    private final Long postId;
+    private final LocalDateTime deletedAt;
 
-    LocalDateTime deletedAt;
-
-    private DeletePostResponse(Long id, LocalDateTime dateTime) {
-        this.postId = id;
-        this.deletedAt = dateTime;
+    private DeletePostResponse(Long postId, LocalDateTime deletedAt) {
+        this.postId = postId;
+        this.deletedAt = deletedAt;
     }
 
-    public static DeletePostResponse from(Long id, LocalDateTime dateTime) {
-        return new DeletePostResponse(id, dateTime);
+    public static DeletePostResponse from(Long postId, LocalDateTime deletedAt) {
+        return new DeletePostResponse(postId, deletedAt);
     }
 }

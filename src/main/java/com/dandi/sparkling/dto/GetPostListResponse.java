@@ -1,20 +1,19 @@
 package com.dandi.sparkling.dto;
 
-import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 
-@Data
+@Getter
 public class GetPostListResponse {
 
-    List<PostResponse> posts;
+    private final List<PostResponse> posts;
 
     private GetPostListResponse(List<PostResponse> posts) {
         this.posts = posts;
     }
 
-    public static GetPostListResponse from (List<PostResponse> posts) {
-
+    public static GetPostListResponse from(List<PostResponse> posts) {
         return new GetPostListResponse(posts);
     }
 }

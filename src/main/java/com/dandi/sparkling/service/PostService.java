@@ -1,6 +1,12 @@
 package com.dandi.sparkling.service;
 
-import com.dandi.sparkling.dto.*;
+import com.dandi.sparkling.dto.CreatePostRequest;
+import com.dandi.sparkling.dto.CreatePostResponse;
+import com.dandi.sparkling.dto.DeletePostResponse;
+import com.dandi.sparkling.dto.GetPostListResponse;
+import com.dandi.sparkling.dto.PostDetailResponse;
+import com.dandi.sparkling.dto.PostResponse;
+import com.dandi.sparkling.dto.UpdatePostRequest;
 import com.dandi.sparkling.entity.Post;
 import com.dandi.sparkling.entity.User;
 import com.dandi.sparkling.repository.PostRepository;
@@ -9,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,33 +39,21 @@ public class PostService {
         return CreatePostResponse.from(postRepository.save(post).getId());
     }
 
-    @Transactional
-    public List<PostResponse> getPostList() {
+    @Transactional(readOnly = true)
+    public GetPostListResponse getPostList() {
 
-        List<Post> all = postRepository.findAll();
-
-        all.sort((p1, p2) -> {
-            return p1.getCreatedAt().compareTo(p2.getCreatedAt());
-        });
-
-        List<String> nickNameList = all.stream()
-                .map(p -> p.getUser().getNickname())
+        List<PostResponse> posts = postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
+                .stream()
+                .map(PostResponse::from)
                 .toList();
 
-        List<PostResponse> posts = new ArrayList<>();
-        for (int i = 0; i < all.size(); i++) {
-
-            posts.add(PostResponse.from(all.get(i).getId(), all.get(i).getTitle(), nickNameList.get(i), all.get(i).getCreatedAt()));
-        }
-
-        return posts;
+        return GetPostListResponse.from(posts);
     }
 
-    @Transactional
-    public PostDetailResponse postDetail(long postId) {
+    @Transactional(readOnly = true)
+    public PostDetailResponse postDetail(Long postId) {
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("해당 Post를 찾을 수 없습니다."));
+        Post post = getActivePost(postId);
 
         return PostDetailResponse.from(post);
     }
@@ -68,20 +61,16 @@ public class PostService {
     @Transactional
     public PostDetailResponse updatePost(Long userId, Long postId, UpdatePostRequest request) {
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("해당 Post를 찾을 수 없습니다."));
-
-        if (!post.getUser().getId().equals(userId)) {
-            throw new RuntimeException("해당 게시글에 권한이 없습니다.");
-        }
+        Post post = getActivePost(postId);
+        validateAuthor(post, userId);
 
         String title = request.getTitle();
-        if (title != null && !title.trim().isBlank()) {
+        if (title != null && !title.isBlank()) {
             post.updateTitle(title);
         }
 
         String content = request.getContent();
-        if (content != null && !content.trim().isBlank()) {
+        if (content != null && !content.isBlank()) {
             post.updateContent(content);
         }
 
@@ -89,21 +78,26 @@ public class PostService {
     }
 
     @Transactional
-    public DeletePostResponse delete(Long userid, Long postId) {
+    public DeletePostResponse delete(Long userId, Long postId) {
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("해당 Post를 찾을 수 없습니다."));
-
-        if (!post.getUser().getId().equals(userid)) {
-            throw new RuntimeException("해당 게시글에 권한이 없습니다.");
-        }
-
-        if (post.getDeletedAt() != null) {
-            throw new RuntimeException("이미 삭제된 게시글 입니다.");
-        }
+        Post post = getActivePost(postId);
+        validateAuthor(post, userId);
 
         post.delete();
 
         return DeletePostResponse.from(post.getId(), post.getDeletedAt());
+    }
+
+    private Post getActivePost(Long postId) {
+
+        return postRepository.findByIdAndDeletedAtIsNull(postId)
+                .orElseThrow(() -> new RuntimeException("해당 게시글을 찾을 수 없습니다."));
+    }
+
+    private void validateAuthor(Post post, Long userId) {
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new RuntimeException("해당 게시글에 권한이 없습니다.");
+        }
     }
 }

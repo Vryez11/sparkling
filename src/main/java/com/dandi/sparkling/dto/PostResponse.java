@@ -1,26 +1,31 @@
 package com.dandi.sparkling.dto;
 
-import lombok.Data;
+import com.dandi.sparkling.entity.Post;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
 public class PostResponse {
 
-    private Long postId;
-    private String title;
-    private String nickname;
-    private LocalDateTime createAt;
+    private final Long postId;
+    private final String title;
+    private final String nickname;
+    private final LocalDateTime createdAt;
 
-    public static PostResponse from(Long postId, String title, String nickname, LocalDateTime dateTime) {
+    private PostResponse(Long postId, String title, String nickname, LocalDateTime createdAt) {
+        this.postId = postId;
+        this.title = title;
+        this.nickname = nickname;
+        this.createdAt = createdAt;
+    }
 
-        PostResponse postResponse = new PostResponse();
-
-        postResponse.setPostId(postId);
-        postResponse.setTitle(title);
-        postResponse.setNickname(nickname);
-        postResponse.setCreateAt(dateTime);
-
-        return postResponse;
+    public static PostResponse from(Post post) {
+        return new PostResponse(
+                post.getId(),
+                post.getTitle(),
+                post.getUser().getNickname(),
+                post.getCreatedAt()
+        );
     }
 }

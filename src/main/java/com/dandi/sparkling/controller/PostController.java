@@ -1,16 +1,26 @@
 package com.dandi.sparkling.controller;
 
 import com.dandi.sparkling.config.security.CurrentUserId;
-import com.dandi.sparkling.dto.*;
-import com.dandi.sparkling.entity.Post;
+import com.dandi.sparkling.dto.CreatePostRequest;
+import com.dandi.sparkling.dto.CreatePostResponse;
+import com.dandi.sparkling.dto.DeletePostResponse;
+import com.dandi.sparkling.dto.GetPostListResponse;
+import com.dandi.sparkling.dto.PostDetailResponse;
+import com.dandi.sparkling.dto.UpdatePostRequest;
 import com.dandi.sparkling.service.PostService;
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/posts")
@@ -20,7 +30,7 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping
-    public ResponseEntity<CreatePostResponse> post(
+    public ResponseEntity<CreatePostResponse> create(
             @CurrentUserId Long userId,
             @Valid @RequestBody CreatePostRequest request
     ) {
@@ -32,41 +42,38 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<GetPostListResponse> postList() {
+    public ResponseEntity<GetPostListResponse> list() {
 
-        List<PostResponse> posts = postService.getPostList();
+        GetPostListResponse response = postService.getPostList();
 
-        return ResponseEntity
-                .ok(GetPostListResponse.from(posts));
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<PostDetailResponse> post(
-            @PathVariable("id") Long postId
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostDetailResponse> detail(
+            @PathVariable Long postId
     ) {
 
         PostDetailResponse response = postService.postDetail(postId);
 
-        return ResponseEntity
-                .ok(response);
+        return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{postId}")
     public ResponseEntity<PostDetailResponse> update(
-            @PathVariable("id") Long postId,
+            @PathVariable Long postId,
             @CurrentUserId Long userId,
-            @RequestBody UpdatePostRequest request
+            @Valid @RequestBody UpdatePostRequest request
     ) {
 
         PostDetailResponse response = postService.updatePost(userId, postId, request);
 
-        return ResponseEntity
-                .ok(response);
+        return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{postId}")
     public ResponseEntity<DeletePostResponse> delete(
-            @PathVariable("id") Long postId,
+            @PathVariable Long postId,
             @CurrentUserId Long userId
     ) {
 
