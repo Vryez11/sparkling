@@ -1,11 +1,15 @@
 package com.dandi.sparkling.config.security;
 
+import com.dandi.sparkling.exception.InvalidRefreshTokenException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -15,13 +19,16 @@ import java.util.UUID;
 public class JwtProvider {
 
     private final JwtEncoder jwtEncoder;
+    private final JwtDecoder refreshTokenDecoder;
     private final long accessExpirationMs;
     private final long refreshExpirationMs;
 
     public JwtProvider(JwtEncoder jwtEncoder,
+                       JwtDecoder refreshTokenDecoder,
                        @Value("${jwt.expiration-ms}") long accessExpirationMs,
                        @Value("${jwt.refresh-expiration-ms}") long refreshExpirationMs) {
         this.jwtEncoder = jwtEncoder;
+        this.refreshTokenDecoder = refreshTokenDecoder;
         this.accessExpirationMs = accessExpirationMs;
         this.refreshExpirationMs = refreshExpirationMs;
     }
@@ -34,19 +41,27 @@ public class JwtProvider {
         return createToken(userId, "refresh", refreshExpirationMs);
     }
 
+    public Long parseRefreshToken(String token) {
+
+        try {
+            Jwt jwt = refreshTokenDecoder.decode(token);
+            return Long.valueOf(jwt.getSubject());
+        } catch (JwtException e) {
+            throw new InvalidRefreshTokenException();
+        }
+    }
+
     private String createToken(Long userId, String type, long expirationMs) {
 
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(String.valueOf(userId))
                 .claim("type", type)
-                // iat/exp가 초 단위라 같은 초에 발급된 토큰이 완전히 동일해진다 — jti로 토큰마다 유일성을 보장 (회전 감지의 전제)
                 .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiresAt(now.plusMillis(expirationMs))
                 .build();
 
-        // 헤더에 HS256을 명시하지 않으면 기본값 RS256으로 대칭키를 찾지 못해 발급이 실패한다
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

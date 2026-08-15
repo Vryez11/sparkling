@@ -6,15 +6,12 @@ import com.dandi.sparkling.dto.RefreshRequest;
 import com.dandi.sparkling.dto.RefreshResponse;
 import com.dandi.sparkling.entity.RefreshToken;
 import com.dandi.sparkling.entity.User;
-import com.dandi.sparkling.exception.RefreshTokenReusedException;
+import com.dandi.sparkling.exception.InvalidRefreshTokenException;
 import com.dandi.sparkling.repository.RefreshTokenRepository;
 import com.dandi.sparkling.repository.UserRepository;
 import com.dandi.sparkling.config.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +23,6 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
-    private final JwtDecoder refreshTokenDecoder;
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
@@ -45,19 +41,17 @@ public class AuthService {
         return LoginResponse.from(user, accessToken, refreshToken);
     }
 
-    @Transactional(noRollbackFor = RefreshTokenReusedException.class)
+    @Transactional(noRollbackFor = InvalidRefreshTokenException.class)
     public RefreshResponse refresh(RefreshRequest request) {
 
-        Jwt jwt = decodeRefreshToken(request.getRefreshToken());
-        Long userId = Long.valueOf(jwt.getSubject());
+        Long userId = jwtProvider.parseRefreshToken(request.getRefreshToken());
 
         RefreshToken saved = refreshTokenRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("유효하지 않은 리프레시 토큰입니다."));
+                .orElseThrow(InvalidRefreshTokenException::new);
 
-        // 서명은 유효한데 저장된 값과 다르면 이미 회전된 토큰 = 탈취 의심 → 세션 자체를 폐기
         if (!saved.getToken().equals(request.getRefreshToken())) {
             refreshTokenRepository.delete(saved);
-            throw new RefreshTokenReusedException();
+            throw new InvalidRefreshTokenException();
         }
 
         String accessToken = jwtProvider.createAccessToken(userId);
@@ -80,14 +74,5 @@ public class AuthService {
                                 .build()));
 
         return refreshToken;
-    }
-
-    private Jwt decodeRefreshToken(String token) {
-
-        try {
-            return refreshTokenDecoder.decode(token);
-        } catch (JwtException e) {
-            throw new RuntimeException("유효하지 않은 리프레시 토큰입니다.");
-        }
     }
 }
