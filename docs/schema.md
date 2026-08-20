@@ -41,8 +41,9 @@
 | content | text | NOT NULL | 내용 |
 | user_id | bigint | FK(users.id), NOT NULL | 작성자 |
 | post_id | bigint | FK(posts.id), NOT NULL | 대상 게시글 |
-| parent_comment_id | bigint | FK(comments.id), NULL 허용 | 부모 댓글 (대댓글용, 최상위 댓글은 NULL) |
+| parent_comment_id | bigint | FK(comments.id), NULL 허용 | 부모 댓글 (대댓글용, 최상위 댓글은 NULL) — 대댓글 미구현, 현재 미사용 |
 | created_at | datetime | | 생성일시 |
+| deleted_at | datetime | NULL 허용 | 삭제일시 (soft delete — posts와 동일, NULL이면 활성) |
 
 ## post_likes
 

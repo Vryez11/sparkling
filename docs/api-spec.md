@@ -68,15 +68,15 @@ Authorization: Bearer {accessToken}
 >
 > 검색도 게시글 목록 조회의 쿼리 파라미터로 처리한다: `GET /posts?category={title|content|hashtag}&keyword=검색어`. 해시태그 검색은 제목/내용 검색과 분리된 별도 카테고리다. 사용자 검색은 게시글 검색에 섞지 않고 별도 API(`GET /users?keyword=`)로 분리한다.
 
-## 댓글 (comments) — 전체 미구현
+## 댓글 (comments)
 
-댓글은 특정 게시글에 속하므로 조회/작성은 게시글 하위 경로로 표현한다. 삭제는 `commentId`가 전역 유일하므로 댓글 ID만으로 지정한다.
+댓글은 특정 게시글에 속하므로 조회/작성은 게시글 하위 경로로 표현한다. 삭제는 `commentId`가 전역 유일하므로 댓글 ID만으로 지정한다. 현재는 평면 댓글만 구현되어 있고, 대댓글(depth 1)과 좋아요는 후속 단계다. 삭제 정책 판단 기록은 `delete-policy.md` 참고.
 
 | 메서드 | URI | 설명 | 인증 | 구현 |
 |---|---|---|---|---|
-| GET | `/posts/{postId}/comments` | 댓글 조회 | 공개 | 미구현 |
-| POST | `/posts/{postId}/comments` | 댓글 작성 | 인증 | 미구현 |
-| DELETE | `/comments/{commentId}` | 댓글 삭제 | 인증(본인) | 미구현 |
+| GET | `/posts/{postId}/comments` | 댓글 조회 | 공개 | ✅ |
+| POST | `/posts/{postId}/comments` | 댓글 작성 | 인증 | ✅ |
+| DELETE | `/comments/{commentId}` | 댓글 삭제 | 인증(본인) | ✅ |
 | POST | `/comments/{commentId}/likes` | 댓글 좋아요 등록 | 인증 | 미구현 |
 | DELETE | `/comments/{commentId}/likes` | 댓글 좋아요 취소 | 인증 | 미구현 |
 
@@ -340,13 +340,17 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 11. 댓글 조회 — 미구현
+## 11. 댓글 조회
 
 ### `GET /posts/{postId}/comments`
 
+없는(또는 삭제된) 게시글의 댓글 목록은 오류다(자원 없음 — 목표 404, 현재 500). 정렬은 오래된 순(`createdAt` ASC) — 댓글은 대화 흐름이라 먼저 달린 댓글이 위에 온다(게시글 목록의 최신순과 의도적으로 다름).
+
 ### 응답 JSON — 200 OK
 
-`commentId`를 포함해 클라이언트가 삭제·좋아요·대댓글 요청 시 사용할 수 있게 한다. 대댓글은 부모 댓글의 `replies` 배열에 중첩해 반환한다(depth 1 고정이므로 중첩은 1단까지). `liked`는 요청자가 그 댓글에 좋아요를 눌렀는지 여부로, 비로그인 조회 시 항상 `false`다.
+`commentId`를 포함해 클라이언트가 삭제 요청 시 사용할 수 있게 한다. `authorId`는 작성자 프로필 조회·채팅 상대 특정에 쓴다.
+
+> 대댓글(`replies` 중첩 배열)과 좋아요(`likeCount`/`liked`) 필드는 해당 기능 구현 시 추가한다.
 
 ```json
 {
@@ -356,51 +360,38 @@ Authorization: Bearer {accessToken}
       "content": "댓글1",
       "authorId": 2,
       "author": "작성자1",
-      "likeCount": 3,
-      "liked": true,
-      "createdAt": "2026-07-10T22:10:01",
-      "replies": [
-        {
-          "commentId": 5,
-          "content": "대댓글1",
-          "authorId": 4,
-          "author": "작성자3",
-          "likeCount": 0,
-          "liked": false,
-          "createdAt": "2026-07-10T22:11:02"
-        }
-      ]
+      "createdAt": "2026-07-10T22:10:01"
     },
     {
       "commentId": 2,
       "content": "댓글2",
       "authorId": 3,
       "author": "작성자2",
-      "likeCount": 0,
-      "liked": false,
-      "createdAt": "2026-07-10T22:11:30",
-      "replies": []
+      "createdAt": "2026-07-10T22:11:30"
     }
   ]
 }
 ```
 
-## 12. 댓글 작성 — 미구현
+## 12. 댓글 작성
 
 ### `POST /posts/{postId}/comments`
 
 ### 요청 JSON
 
-대댓글은 `parentCommentId`에 부모 댓글 ID를 담아 보낸다. 필드를 생략하면 일반 댓글이다. 부모가 이미 대댓글인 경우(depth 초과)는 400 Bad Request로 거절한다.
+없는(또는 삭제된) 게시글에는 댓글을 달 수 없다(자원 없음 — 목표 404, 현재 500).
+
+> 대댓글(`parentCommentId` 필드, depth 1 고정, 초과 시 400)은 해당 기능 구현 시 추가한다.
 
 ```json
 {
-  "content": "댓글 내용",
-  "parentCommentId": 1
+  "content": "댓글 내용"
 }
 ```
 
 ### 응답 JSON — 201 Created
+
+댓글은 단건 조회 API가 없으므로 `Location` 헤더 없이 본문의 `commentId`만 반환한다.
 
 ```json
 {
@@ -408,7 +399,7 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 13. 댓글 삭제 — 미구현
+## 13. 댓글 삭제
 
 ### `DELETE /comments/{commentId}`
 
