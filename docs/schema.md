@@ -29,6 +29,7 @@
 | title | varchar(100) | NOT NULL | 제목 |
 | content | text | | 본문 |
 | user_id | bigint | FK(users.id), NOT NULL | 작성자 |
+| like_count | int | NOT NULL | 좋아요 수 (비정규화 캐시 — 원본은 post_likes, 등록/취소 시 원자적 UPDATE로 증감, 생성 시 0) |
 | created_at | datetime | | 생성일시 |
 | updated_at | datetime | | 수정일시 |
 | deleted_at | datetime | NULL 허용 | 삭제일시 (soft delete — NULL이면 활성, 값이 있으면 목록/상세/수정에서 제외) |

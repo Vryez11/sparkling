@@ -40,6 +40,7 @@ Authorization: Bearer {accessToken}
 | 401 Unauthorized | 인증 실패 (토큰 없음/만료, 로그인 실패) | ✅ (토큰 검증에 한함) |
 | 403 Forbidden | 인가 실패 (작성자 본인이 아님) | 미구현 (현재 500) |
 | 404 Not Found | 자원 없음 (존재하지 않는 게시글/댓글) | 미구현 (현재 500) |
+| 409 Conflict | 중복 좋아요 등록 | 미구현 (현재 500) |
 
 ## 사용자 (users)
 
@@ -61,8 +62,8 @@ Authorization: Bearer {accessToken}
 | GET | `/posts/{postId}` | 상세 게시글 조회 | 공개 | ✅ |
 | PATCH | `/posts/{postId}` | 게시글 수정 | 인증(본인) | ✅ |
 | DELETE | `/posts/{postId}` | 게시글 삭제 | 인증(본인) | ✅ |
-| POST | `/posts/{postId}/likes` | 게시글 좋아요 등록 | 인증 | 미구현 |
-| DELETE | `/posts/{postId}/likes` | 게시글 좋아요 취소 | 인증 | 미구현 |
+| POST | `/posts/{postId}/likes` | 게시글 좋아요 등록 | 인증 | ✅ |
+| DELETE | `/posts/{postId}/likes` | 게시글 좋아요 취소 | 인증 | ✅ |
 
 > `GET /posts?author=me`는 별도 API가 아니라 게시글 목록 조회의 필터 옵션이다. `author=me`를 사용할 때만 인증이 필요하다.
 >
@@ -243,13 +244,14 @@ Authorization: Bearer {accessToken}
       "postId": 1,
       "title": "게시글 제목",
       "nickname": "작성자 닉네임",
+      "likeCount": 4,
       "createdAt": "2026-07-10T21:37:05"
     }
   ]
 }
 ```
 
-> 좋아요·해시태그 기능 구현 시 `authorId`, `likeCount`, `liked` 필드가 추가될 예정이다. `liked`는 요청자가 그 게시글에 좋아요를 눌렀는지 여부로, 비로그인 조회 시 항상 `false`다. (상세 조회 응답도 동일)
+> 해시태그·프로필 연동 구현 시 `authorId`, `liked` 필드가 추가될 예정이다. `liked`는 요청자가 그 게시글에 좋아요를 눌렀는지 여부로, 비로그인 조회 시 항상 `false`다. (상세 조회 응답도 동일)
 
 ## 7. 게시글 등록
 
@@ -290,11 +292,12 @@ Authorization: Bearer {accessToken}
   "title": "게시글 제목",
   "content": "게시글 내용",
   "nickname": "작성자 닉네임",
+  "likeCount": 4,
   "createdAt": "2026-07-10T21:37:05"
 }
 ```
 
-> 좋아요·해시태그 기능 구현 시 `hashtags`, `authorId`, `likeCount`, `liked` 필드가 추가될 예정이다.
+> 해시태그·프로필 연동 구현 시 `hashtags`, `authorId`, `liked` 필드가 추가될 예정이다.
 
 ## 9. 게시글 수정
 
@@ -321,6 +324,7 @@ Authorization: Bearer {accessToken}
   "title": "수정된 제목",
   "content": "수정된 내용",
   "nickname": "작성자 닉네임",
+  "likeCount": 4,
   "createdAt": "2026-07-10T21:37:05"
 }
 ```
@@ -414,21 +418,27 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 14. 좋아요 등록 / 취소 (게시글 · 댓글) — 미구현
+## 14. 게시글 좋아요 등록 / 취소
 
 ### `POST /posts/{postId}/likes` · `DELETE /posts/{postId}/likes`
-### `POST /comments/{commentId}/likes` · `DELETE /comments/{commentId}/likes`
 
-게시글과 댓글 모두 같은 방식이다. 등록과 취소 모두 **멱등**이다 — 이미 좋아요를 누른 상태에서 다시 등록해도 개수는 변하지 않고, 누르지 않은 상태에서 취소해도 오류가 아니다. 요청 본문은 없다.
+요청 본문은 없다. 등록과 취소는 **멱등이 아니다** — 클라이언트가 조회 응답의 상태를 보고 등록/취소 중 맞는 요청을 보낸다는 전제로, 이미 좋아요를 누른 상태의 등록(중복 — 목표 409)과 누르지 않은 상태의 취소(자원 없음 — 목표 404)는 비즈니스 오류로 거절한다. (현재는 전역 핸들러 부재로 500)
+
+좋아요 수는 `posts.like_count` 컬럼에 원자적 UPDATE로 증감해 동시 요청에도 유실되지 않는다. 어떤 사용자가 눌렀는지의 원본 기록은 `post_likes` 테이블이며, 중복 등록은 UNIQUE(`user_id`, `post_id`) 제약이 DB 차원에서 한 번 더 막는다.
 
 ### 응답 JSON — 200 OK
 
-등록(`POST`)과 취소(`DELETE`) 모두 반영된 최신 상태를 반환한다. 댓글 좋아요의 예시이며, 게시글 좋아요는 `commentId` 대신 `postId`를 반환한다.
+등록(`POST`)과 취소(`DELETE`) 모두 반영된 최신 상태를 같은 형식으로 반환한다.
 
 ```json
 {
-  "commentId": 1,
-  "likeCount": 4,
-  "liked": true
+  "postId": 1,
+  "likeCount": 4
 }
 ```
+
+## 15. 댓글 좋아요 등록 / 취소 — 미구현
+
+### `POST /comments/{commentId}/likes` · `DELETE /comments/{commentId}/likes`
+
+게시글 좋아요와 같은 방식으로 구현할 예정이다. 응답은 `postId` 대신 `commentId`와 `likeCount`를 반환한다.
