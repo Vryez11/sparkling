@@ -12,13 +12,15 @@ public class PostDetailResponse {
     private final String title;
     private final String content;
     private final String nickname;
+    private final int likeCount;
     private final LocalDateTime createdAt;
 
-    private PostDetailResponse(Long postId, String title, String content, String nickname, LocalDateTime createdAt) {
+    private PostDetailResponse(Long postId, String title, String content, String nickname, int likeCount, LocalDateTime createdAt) {
         this.postId = postId;
         this.title = title;
         this.content = content;
         this.nickname = nickname;
+        this.likeCount = likeCount;
         this.createdAt = createdAt;
     }
 
@@ -28,6 +30,7 @@ public class PostDetailResponse {
                 post.getTitle(),
                 post.getContent(),
                 post.getUser().getNickname(),
+                post.getLikeCount(),
                 post.getCreatedAt()
         );
     }
