@@ -1,12 +1,7 @@
 package com.dandi.sparkling.controller;
 
 import com.dandi.sparkling.config.security.CurrentUserId;
-import com.dandi.sparkling.dto.CreatePostRequest;
-import com.dandi.sparkling.dto.CreatePostResponse;
-import com.dandi.sparkling.dto.DeletePostResponse;
-import com.dandi.sparkling.dto.GetPostListResponse;
-import com.dandi.sparkling.dto.PostDetailResponse;
-import com.dandi.sparkling.dto.UpdatePostRequest;
+import com.dandi.sparkling.dto.*;
 import com.dandi.sparkling.service.PostService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -78,6 +73,17 @@ public class PostController {
     ) {
 
         DeletePostResponse response = postService.delete(userId, postId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{postId}/likes")
+    public ResponseEntity<PostLikeResponse> like(
+            @PathVariable Long postId,
+            @CurrentUserId Long userId
+    ) {
+
+        PostLikeResponse response = postService.likePost(userId, postId);
 
         return ResponseEntity.ok(response);
     }

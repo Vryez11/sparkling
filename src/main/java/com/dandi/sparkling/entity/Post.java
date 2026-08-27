@@ -40,6 +40,9 @@ public class Post {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "like_count", nullable = false)
+    private Integer likeCount;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -52,11 +55,12 @@ public class Post {
     private LocalDateTime deletedAt;
 
     @Builder
-    private Post(String title, String content, User user) {
+    private Post(String title, String content, User user, Integer count) {
 
         this.title = title;
         this.content = content;
         this.user = user;
+        this.likeCount = count;
     }
 
     public void delete() {

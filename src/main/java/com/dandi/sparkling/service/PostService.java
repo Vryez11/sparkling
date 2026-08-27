@@ -1,14 +1,10 @@
 package com.dandi.sparkling.service;
 
-import com.dandi.sparkling.dto.CreatePostRequest;
-import com.dandi.sparkling.dto.CreatePostResponse;
-import com.dandi.sparkling.dto.DeletePostResponse;
-import com.dandi.sparkling.dto.GetPostListResponse;
-import com.dandi.sparkling.dto.PostDetailResponse;
-import com.dandi.sparkling.dto.PostResponse;
-import com.dandi.sparkling.dto.UpdatePostRequest;
+import com.dandi.sparkling.dto.*;
 import com.dandi.sparkling.entity.Post;
+import com.dandi.sparkling.entity.PostLike;
 import com.dandi.sparkling.entity.User;
+import com.dandi.sparkling.repository.PostLikeRepository;
 import com.dandi.sparkling.repository.PostRepository;
 import com.dandi.sparkling.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,17 +20,18 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final PostLikeRepository postLikeRepository;
 
     @Transactional
     public CreatePostResponse createPost(Long userId, CreatePostRequest request) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+        User user = getActiveUser(userId);
 
         Post post = Post.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
                 .user(user)
+                .count(0)
                 .build();
 
         return CreatePostResponse.from(postRepository.save(post).getId());
@@ -86,6 +84,36 @@ public class PostService {
         post.delete();
 
         return DeletePostResponse.from(post.getId(), post.getDeletedAt());
+    }
+
+    @Transactional
+    public PostLikeResponse likePost(Long userId, Long postId) {
+
+        User existingUser = getActiveUser(userId);
+        Post existingPost = getActivePost(postId);
+
+        Optional<PostLike> postLike = postLikeRepository.findByPostAndUser(existingPost, existingUser);
+
+        if (postLike.isPresent()) {
+            throw new RuntimeException("이미 좋아요를 누른 게시글입니다.");
+        }
+
+        postLikeRepository.save(PostLike.builder()
+                .user(existingUser)
+                .post(existingPost)
+                .build());
+
+        postRepository.increaseLikeCount(postId);
+
+        Post refreshed = getActivePost(postId);
+
+        return PostLikeResponse.from(refreshed.getId(), refreshed.getLikeCount());
+    }
+
+    private User getActiveUser(Long userId) {
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
     }
 
     private Post getActivePost(Long postId) {
