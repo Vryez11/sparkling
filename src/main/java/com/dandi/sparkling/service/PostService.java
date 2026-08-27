@@ -110,6 +110,24 @@ public class PostService {
         return PostLikeResponse.from(refreshed.getId(), refreshed.getLikeCount());
     }
 
+    @Transactional
+    public PostLikeResponse unlikePost(Long userId, Long postId) {
+
+        User existingUser = getActiveUser(userId);
+        Post existingPost = getActivePost(postId);
+
+        PostLike postLike = postLikeRepository.findByPostAndUser(existingPost, existingUser)
+                .orElseThrow(() -> new RuntimeException("좋아요를 누르지 않은 게시글입니다."));
+
+        postLikeRepository.delete(postLike);
+
+        postRepository.decreaseLikeCount(postId);
+
+        Post refreshed = getActivePost(postId);
+
+        return PostLikeResponse.from(refreshed.getId(), refreshed.getLikeCount());
+    }
+
     private User getActiveUser(Long userId) {
 
         return userRepository.findById(userId)
