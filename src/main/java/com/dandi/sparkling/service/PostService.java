@@ -8,6 +8,9 @@ import com.dandi.sparkling.repository.PostLikeRepository;
 import com.dandi.sparkling.repository.PostRepository;
 import com.dandi.sparkling.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,9 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class PostService {
+
+    private static final int DEFAULT_SIZE = 10;
+    private static final int MAX_SIZE = 50;
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
@@ -38,14 +44,19 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public GetPostListResponse getPostList() {
+    public GetPostListResponse getPostList(int page, int size) {
 
-        List<PostResponse> posts = postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
-                .stream()
-                .map(PostResponse::from)
-                .toList();
+        Page<Post> postPage = postRepository.findAllByDeletedAtIsNull(toPageRequest(page, size));
 
-        return GetPostListResponse.from(posts);
+        return toPostListResponse(postPage);
+    }
+
+    @Transactional(readOnly = true)
+    public GetPostListResponse getMyPostList(Long userId, int page, int size) {
+
+        Page<Post> postPage = postRepository.findAllByUserIdAndDeletedAtIsNull(userId, toPageRequest(page, size));
+
+        return toPostListResponse(postPage);
     }
 
     @Transactional(readOnly = true)
@@ -126,6 +137,39 @@ public class PostService {
         Post refreshed = getActivePost(postId);
 
         return PostLikeResponse.from(refreshed.getId(), refreshed.getLikeCount());
+    }
+
+    private PageRequest toPageRequest(int page, int size) {
+
+        if (page < 0) {
+            page = 0;
+        }
+        if (size < 1) {
+            size = DEFAULT_SIZE;
+        }
+        if (size > MAX_SIZE) {
+            size = MAX_SIZE;
+        }
+
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
+    }
+
+    private GetPostListResponse toPostListResponse(Page<Post> postPage) {
+
+        List<PostResponse> posts = postPage.getContent()
+                .stream()
+                .map(PostResponse::from)
+                .toList();
+
+        PageInfoResponse pageInfo = PageInfoResponse.from(
+                postPage.getNumber(),
+                postPage.getSize(),
+                postPage.getTotalElements(),
+                postPage.getTotalPages(),
+                postPage.hasNext()
+        );
+
+        return GetPostListResponse.from(posts, pageInfo);
     }
 
     private User getActiveUser(Long userId) {

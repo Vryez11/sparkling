@@ -8,12 +8,14 @@ import java.util.List;
 public class GetPostListResponse {
 
     private final List<PostResponse> posts;
+    private final PageInfoResponse pageInfo;
 
-    private GetPostListResponse(List<PostResponse> posts) {
+    private GetPostListResponse(List<PostResponse> posts, PageInfoResponse pageInfo) {
         this.posts = posts;
+        this.pageInfo = pageInfo;
     }
 
-    public static GetPostListResponse from(List<PostResponse> posts) {
-        return new GetPostListResponse(posts);
+    public static GetPostListResponse from(List<PostResponse> posts, PageInfoResponse pageInfo) {
+        return new GetPostListResponse(posts, pageInfo);
     }
 }
